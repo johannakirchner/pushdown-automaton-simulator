@@ -2,21 +2,23 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <string.h>
 
 using namespace std;
 
+class State;
 class Transition
 {
-    State* go_to;
+    State *go_to;
     char input_char;
     char pop;
     string push;
 
 public:
-    Transition(char input_char, char pop, string push, State* go_to) : go_to(go_to), input_char(input_char), pop(pop), push(push) {}
+    Transition(char input_char, char pop, string push, State *go_to) : go_to(go_to), input_char(input_char), pop(pop), push(push) {}
 
     // getters
-    State* getGo_to()
+    State *getGo_to()
     {
         return this->go_to;
     }
@@ -41,20 +43,23 @@ public:
 class State
 {
     int q; // state number
-    vector<Transition*> transitions;
+    vector<Transition *> transitions;
     bool isFinalState = false;
 
 public:
     State(int q) : q(q) {}
 
     // getters
-    Transition* getTransition(int t) {
+    Transition *getTransition(int t)
+    {
         return transitions[t];
     }
-    bool isFinalState(){
+    bool FinalState()
+    {
         return isFinalState;
     }
-    int getQ(){
+    int getQ()
+    {
         return q;
     }
     // setters
@@ -62,7 +67,7 @@ public:
     {
         this->isFinalState = true;
     }
-    void setNewTransition(char input_char, char pop, string push, State* go_to)
+    void setNewTransition(char input_char, char pop, string push, State *go_to)
     {
         this->transitions.push_back(new Transition(input_char, pop, push, go_to));
     }
@@ -74,6 +79,16 @@ public:
             transitions[i]->print();
             cout << endl;
         }
+    }
+    vector<Transition*> getAllTrasitionsByChar(char c)
+    {
+        vector<Transition*> transitionsByChar;
+        for(int i = 0; i < this->transitions.size(); i++) {
+            if(transitions[i]->getInput_char() == c) {
+                transitionsByChar.push_back(transitions[i]);
+            }
+        }
+        return transitionsByChar;
     }
 };
 
@@ -105,21 +120,44 @@ void setAllStateTransistions(vector<State *> states, int T)
     }
 }
 
-void setFinalStates(vector<State *> states){
+void setFinalStates(vector<State *> states)
+{
     int numFinalStates, final;
     cin >> numFinalStates;
-    for(int i = 0; i < numFinalStates; i++) {
+    for (int i = 0; i < numFinalStates; i++)
+    {
         cin >> final;
         states[final]->setFinalStateTrue();
     }
 }
+
+bool testWord(State* currentState, string remainingWord, stack<char> *s ) {
+    if(remainingWord.compare("")){
+        if(currentState->FinalState()) {
+            return true;
+        }
+        return false;
+    }
+    vector<Transition*> t = currentState->getAllTrasitionsByChar(remainingWord[0]);
+    for(int i = 0; i < t.size(); i++ ) {
+        if(t[i]->getPop() == '&' or t[i]->getPop() == s->top()) {
+            s->pop();
+            for(int j = t[i]->getPush().length(); j > 0; j--) {
+                s->push(t[i]->getPush()[j]);
+            }
+            return testWord(t[i]->getGo_to(), remainingWord.substr(1, remainingWord.length()-1), s);
+        }
+    }
+    return false;
+}
+
 
 int main()
 {
     int Q, T;
     stack<char> *s;
     s->push('Z');
-    vector<State*> states;
+    vector<State *> states;
 
     cin >> Q;
     cin >> T;
@@ -129,20 +167,26 @@ int main()
     {
         states.push_back(new State(i));
     }
- 
+
     setAllStateTransistions(states, T);
 
     setFinalStates(states);
 
     string word;
     cin >> word;
-    while(word != "*") {
-
+    while (word != "*")
+    {
+        cin >> word;
+        if(testWord(states[0],word, s)) {
+            cout << "verdade" << endl;
+        }
+        else
+            cout << "mentira" << endl;
     }
 
     // TODO:
-    //      - transition.getTransitions(char); 
+    //      - states.getTransitions(char);
     //      - transições que aceitam o char sendo consumido agora E também as transições vazias
-    
+
     return 0;
 }
