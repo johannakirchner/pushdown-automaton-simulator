@@ -136,38 +136,50 @@ void setFinalStates(vector<State *> states)
 
 bool testWord(State *currentState, string remainingWord, stack<char> s)
 {
-    cout << endl << "estado atual: " << currentState->getQ() 
-         << " - topo pilha: " << s.top() << " - palavra restante: " << remainingWord << endl << endl;
-   if (currentState->FinalState() and remainingWord == "")
+    if (s.empty())
+    {
+        return false;
+    }
+    cout << endl
+         << "estado atual: " << currentState->getQ()
+         << " - topo pilha: " << s.top() << " - palavra restante: " << remainingWord << endl
+         << endl;
+    if (currentState->FinalState() and remainingWord == "")
     {
         return true;
     }
 
     vector<Transition *> t = currentState->getAllTrasitionsByChar(remainingWord[0]);
-    for(int i = 0; i < t.size(); i++) {
-        cout << "input char das transicoes: " << t[i]->getInput_char() << endl;
+    for (int i = 0; i < t.size(); i++)
+    {
+        cout << "estado para ir: " << t[i]->getGo_to()->getQ() << ", input char das transicoes: " << t[i]->getInput_char() << ", pop: " << t[i]->getPop() << endl;
     }
     for (int i = 0; i < t.size(); i++)
     {
         if (t[i]->getPop() == '&' or t[i]->getPop() == s.top())
         {
-            if(t[i]->getPop() != '&') {
+            // so da pop se a transicao pede
+            if (t[i]->getPop() != '&' or t[i]->getPop() == s.top())
+            {
                 s.pop();
             }
-            // for (int j = t[i]->getPush().length(); j > 0; j--)
-            // {
-            //     s->push(t[i]->getPush()[0]);
-            // } // pra quando tiver com stirng
-            if(t[i]->getPush()[0] != '&'){
-                cout << "sendo pushado na pilha: " << t[i]->getPush()[0] << endl;
+
+            //  ele so da push quando nao eh char vazio
+            if (t[i]->getPush()[0] != '&')
+            {
                 s.push(t[i]->getPush()[0]);
             }
-            cout << endl << "topo da pilha de depois de pushado: " << s.top();
 
-            if(t[i]->getInput_char() == '&') {
-                return testWord(t[i]->getGo_to(), remainingWord, s);
+            // letra a ser consumido eh vazio, nao consome da palavra
+            if (t[i]->getInput_char() == '&')
+            {
+                if(testWord(t[i]->getGo_to(), remainingWord, s)) {
+                    return true;
+                };
             }
-            return testWord(t[i]->getGo_to(), remainingWord.substr(1, remainingWord.length() - 1), s);
+            else
+                if(testWord(t[i]->getGo_to(), remainingWord.substr(1, remainingWord.length() - 1), s))
+                    return true;
         }
     }
     return false;
@@ -207,8 +219,9 @@ int main()
     }
 
     // TODO:
-    //      - states.getTransitions(char);
-    //      - transições que aceitam o char sendo consumido agora E também as transições vazias
+    //      - ver porque a recursao nao volta no for pra continuar (era pq eu tava retornando o resultado sem dar chance de checar outras possibildades)
+    //      - parsear o parse para funcionar com pushs de dois chars e
+    //      - 100 estados, 100 trasicoes e 100 empilhamentos por transicao, palavras entre 1 e 100 chars
 
     return 0;
 }
