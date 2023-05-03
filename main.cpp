@@ -7,6 +7,7 @@
 using namespace std;
 
 class State;
+
 class Transition
 {
     State *go_to;
@@ -36,7 +37,7 @@ public:
     }
     void print()
     {
-        cout << " char: " << input_char << " pop: " << pop << " push: " << push << " goto: " << go_to->getQ();
+        cout << " char: " << input_char << " pop: " << pop << " push: " << push << " goto: ";
     }
 };
 
@@ -80,11 +81,13 @@ public:
             cout << endl;
         }
     }
-    vector<Transition*> getAllTrasitionsByChar(char c)
+    vector<Transition *> getAllTrasitionsByChar(char c)
     {
-        vector<Transition*> transitionsByChar;
-        for(int i = 0; i < this->transitions.size(); i++) {
-            if(transitions[i]->getInput_char() == c) {
+        vector<Transition *> transitionsByChar;
+        for (int i = 0; i < this->transitions.size(); i++)
+        {
+            if (transitions[i]->getInput_char() == c or transitions[i]->getInput_char() == '&')
+            {
                 transitionsByChar.push_back(transitions[i]);
             }
         }
@@ -131,32 +134,49 @@ void setFinalStates(vector<State *> states)
     }
 }
 
-bool testWord(State* currentState, string remainingWord, stack<char> *s ) {
-    if(remainingWord.compare("")){
-        if(currentState->FinalState()) {
-            return true;
-        }
-        return false;
+bool testWord(State *currentState, string remainingWord, stack<char> s)
+{
+    cout << endl << "estado atual: " << currentState->getQ() 
+         << " - topo pilha: " << s.top() << " - palavra restante: " << remainingWord << endl << endl;
+   if (currentState->FinalState() and remainingWord == "")
+    {
+        return true;
     }
-    vector<Transition*> t = currentState->getAllTrasitionsByChar(remainingWord[0]);
-    for(int i = 0; i < t.size(); i++ ) {
-        if(t[i]->getPop() == '&' or t[i]->getPop() == s->top()) {
-            s->pop();
-            for(int j = t[i]->getPush().length(); j > 0; j--) {
-                s->push(t[i]->getPush()[j]);
+
+    vector<Transition *> t = currentState->getAllTrasitionsByChar(remainingWord[0]);
+    for(int i = 0; i < t.size(); i++) {
+        cout << "input char das transicoes: " << t[i]->getInput_char() << endl;
+    }
+    for (int i = 0; i < t.size(); i++)
+    {
+        if (t[i]->getPop() == '&' or t[i]->getPop() == s.top())
+        {
+            if(t[i]->getPop() != '&') {
+                s.pop();
             }
-            return testWord(t[i]->getGo_to(), remainingWord.substr(1, remainingWord.length()-1), s);
+            // for (int j = t[i]->getPush().length(); j > 0; j--)
+            // {
+            //     s->push(t[i]->getPush()[0]);
+            // } // pra quando tiver com stirng
+            if(t[i]->getPush()[0] != '&'){
+                cout << "sendo pushado na pilha: " << t[i]->getPush()[0] << endl;
+                s.push(t[i]->getPush()[0]);
+            }
+            cout << endl << "topo da pilha de depois de pushado: " << s.top();
+
+            if(t[i]->getInput_char() == '&') {
+                return testWord(t[i]->getGo_to(), remainingWord, s);
+            }
+            return testWord(t[i]->getGo_to(), remainingWord.substr(1, remainingWord.length() - 1), s);
         }
     }
     return false;
 }
 
-
 int main()
 {
     int Q, T;
-    stack<char> *s;
-    s->push('Z');
+
     vector<State *> states;
 
     cin >> Q;
@@ -172,16 +192,18 @@ int main()
 
     setFinalStates(states);
 
-    string word;
-    cin >> word;
+    string word = "";
     while (word != "*")
     {
+        stack<char> s;
+        s.push('Z');
         cin >> word;
-        if(testWord(states[0],word, s)) {
-            cout << "verdade" << endl;
+        if (testWord(states[0], word, s))
+        {
+            cout << word << ": sim" << endl;
         }
         else
-            cout << "mentira" << endl;
+            cout << word << ": nao" << endl;
     }
 
     // TODO:
