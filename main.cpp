@@ -99,31 +99,6 @@ void setAllStateTransistions(vector<State *> states, int T)
 {
     for (int i = 0; i < T; i++)
     {
-        string transition_input;
-        getline(cin >> ws, transition_input);
-
-        int state_num, go_to;
-        char input_char, pop;
-        string push;
-
-        state_num = transition_input[0] - '0';
-        input_char = transition_input[2];
-        pop = transition_input[4];
-        if (transition_input[7] == ' ')
-        {
-            push = transition_input[6];
-        }
-        else
-        {
-            push = transition_input.substr(6, 2);
-        }
-        go_to = transition_input.at(transition_input.length() - 1) - '0';
-
-        states[state_num]->setNewTransition(input_char, pop, push, states[go_to]);
-    }
-
-    for (int i = 0; i < T; i++)
-    {
         int state_num, go_to;
         char input_char, pop;
         string push;
@@ -133,7 +108,7 @@ void setAllStateTransistions(vector<State *> states, int T)
 
         int spaceCount = 0;
         int lastParameter = 0;
-        for (int j = 0; j < transition_input.length(); j++)
+        for (int j = 0; j < transition_input.length() + 1; j++)
         {
             if (transition_input[j] == ' ' or transition_input[j] == '\0')
             {
@@ -141,28 +116,36 @@ void setAllStateTransistions(vector<State *> states, int T)
                 // estado em que a transicao esta
                 if (spaceCount == 1)
                 {
-                    state_num = stoi(transition_input.substr(0, i-1));
-                    lastParameter = i+1;
+                    state_num = stoi(transition_input.substr(0, j));
+                    lastParameter = i + 1;
                 }
                 // char consumido
                 if (spaceCount == 2)
                 {
-                    
+                    input_char = transition_input[j - 1];
+                    lastParameter = j + 1;
                 }
                 // pop
                 if (spaceCount == 3)
                 {
+                    pop = transition_input[j - 1];
+                    lastParameter = j + 1;
                 }
                 // push
                 if (spaceCount == 4)
                 {
+                    push = transition_input.substr(lastParameter, j - lastParameter);
+                    lastParameter = j + 1;
                 }
                 // goto
                 if (spaceCount == 5)
                 {
+                    go_to = stoi(transition_input.substr(lastParameter, j - lastParameter));
                 }
             }
         }
+        states[state_num]->setNewTransition(input_char, pop, push, states[go_to]);
+        // cout << "state num: " << state_num << ", char consumido: " << input_char << ", pop: " << pop << ", push: " << push << ", goto: " << go_to << endl;
     }
 }
 
@@ -228,22 +211,16 @@ bool testWord(State *currentState, string remainingWord, stack<char> s)
     {
         return false;
     }
-    /*cout << endl
-         << "estado atual: " << currentState->getQ()
-         << " - topo pilha: " << s.top() << " - palavra restante: " << remainingWord << endl
-         << endl;*/
     if (isFinalStateAndEndOfWord(currentState->FinalState(), remainingWord))
     {
         return true;
     }
-
     vector<Transition *> t = currentState->getAllTrasitionsByChar(remainingWord[0]);
-    // for (int i = 0; i < t.size(); i++)
-    // {
-    //     cout << "estado para ir: " << t[i]->getGo_to()->getQ() << ", input char das transicoes: " << t[i]->getInput_char() << ", pop: " << t[i]->getPop() << endl;
-    // }
+    stack<char> CurrentStack = s;
+
     for (int i = 0; i < t.size(); i++)
     {
+        s = CurrentStack;
         if (isStackTopAcceptedByTransition(t[i]->getPop(), s.top()))
         {
             if (isPopNotEmpty(t[i]->getPop()))
@@ -251,14 +228,16 @@ bool testWord(State *currentState, string remainingWord, stack<char> s)
                 s.pop();
             }
 
-            //  alterar quando for usar push grande
             if (isPushNotEmpty(t[i]->getPush()[0]))
             {
-                s.push(t[i]->getPush()[0]);
+                for (int k = t[i]->getPush().length() - 1; k >= 0; k--)
+                {
+                    // push de cada char da string na pilha
+                    s.push(t[i]->getPush()[k]);
+                }
             }
 
             string next_word = nextWord(t[i]->getInput_char(), remainingWord);
-
             if (testWord(t[i]->getGo_to(), next_word, s))
             {
                 return true;
@@ -266,6 +245,14 @@ bool testWord(State *currentState, string remainingWord, stack<char> s)
         }
     }
     return false;
+}
+
+void createStates(vector<State *> *states, int Q)
+{
+    for (int i = 0; i < Q; i++)
+    {
+        states->push_back(new State(i));
+    }
 }
 
 int main()
@@ -277,34 +264,26 @@ int main()
     cin >> Q;
     cin >> T;
 
-    // break into create states()
-    for (int i = 0; i < Q; i++)
-    {
-        states.push_back(new State(i));
-    }
+    createStates(&states, Q);
 
     setAllStateTransistions(states, T);
 
     setFinalStates(states);
 
     string word = "";
+    cin >> word;
+
     while (word != "*")
     {
         stack<char> s;
         s.push('Z');
-        cin >> word;
         if (testWord(states[0], word, s))
-        {
             cout << word << ": sim" << endl;
-        }
+
         else
             cout << word << ": nao" << endl;
+        cin >> word;
     }
-
-    // TODO:
-    //      - ver porque a recursao nao volta no for pra continuar (era pq eu tava retornando o resultado sem dar chance de checar outras possibildades)
-    //      - parsear o parse para funcionar com pushs de dois chars e
-    //      - 100 estados, 100 trasicoes e 100 empilhamentos por transicao, palavras entre 1 e 100 chars
 
     return 0;
 }
