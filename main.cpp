@@ -35,15 +35,11 @@ public:
     {
         return this->push;
     }
-    void print()
-    {
-        cout << " char: " << input_char << " pop: " << pop << " push: " << push << " goto: ";
-    }
 };
 
 class State
 {
-    int q; // state number
+    int q; // numero de estado
     vector<Transition *> transitions;
     bool isFinalState = false;
 
@@ -72,17 +68,9 @@ public:
     {
         this->transitions.push_back(new Transition(input_char, pop, push, go_to));
     }
-    void print()
-    {
-        cout << "q: " << q << " is final: " << isFinalState << endl;
-        for (int i = 0; i < transitions.size(); i++)
-        {
-            transitions[i]->print();
-            cout << endl;
-        }
-    }
     vector<Transition *> getAllTrasitionsByChar(char c)
     {
+        // retorna as transicoes que consomem uma letra especifica c
         vector<Transition *> transitionsByChar;
         for (int i = 0; i < this->transitions.size(); i++)
         {
@@ -97,6 +85,7 @@ public:
 
 void setAllStateTransistions(vector<State *> states, int T)
 {
+    // para cada transicao que vai ser inserida, o parser divide o que cada coisa eh pela posicao do ultimo espaco lido
     for (int i = 0; i < T; i++)
     {
         int state_num, go_to;
@@ -145,7 +134,6 @@ void setAllStateTransistions(vector<State *> states, int T)
             }
         }
         states[state_num]->setNewTransition(input_char, pop, push, states[go_to]);
-        // cout << "state num: " << state_num << ", char consumido: " << input_char << ", pop: " << pop << ", push: " << push << ", goto: " << go_to << endl;
     }
 }
 
@@ -232,11 +220,12 @@ bool testWord(State *currentState, string remainingWord, stack<char> s)
             {
                 for (int k = t[i]->getPush().length() - 1; k >= 0; k--)
                 {
-                    // push de cada char da string na pilha
+                    // push de cada letra na pilha
                     s.push(t[i]->getPush()[k]);
                 }
             }
 
+            // se era uma transicao vazia a palavra restante vai ser a mesma
             string next_word = nextWord(t[i]->getInput_char(), remainingWord);
             if (testWord(t[i]->getGo_to(), next_word, s))
             {
