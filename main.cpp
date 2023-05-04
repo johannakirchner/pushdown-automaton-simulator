@@ -121,6 +121,49 @@ void setAllStateTransistions(vector<State *> states, int T)
 
         states[state_num]->setNewTransition(input_char, pop, push, states[go_to]);
     }
+
+    for (int i = 0; i < T; i++)
+    {
+        int state_num, go_to;
+        char input_char, pop;
+        string push;
+
+        string transition_input;
+        getline(cin >> ws, transition_input);
+
+        int spaceCount = 0;
+        int lastParameter = 0;
+        for (int j = 0; j < transition_input.length(); j++)
+        {
+            if (transition_input[j] == ' ' or transition_input[j] == '\0')
+            {
+                spaceCount++;
+                // estado em que a transicao esta
+                if (spaceCount == 1)
+                {
+                    state_num = stoi(transition_input.substr(0, i-1));
+                    lastParameter = i+1;
+                }
+                // char consumido
+                if (spaceCount == 2)
+                {
+                    
+                }
+                // pop
+                if (spaceCount == 3)
+                {
+                }
+                // push
+                if (spaceCount == 4)
+                {
+                }
+                // goto
+                if (spaceCount == 5)
+                {
+                }
+            }
+        }
+    }
 }
 
 void setFinalStates(vector<State *> states)
@@ -134,52 +177,92 @@ void setFinalStates(vector<State *> states)
     }
 }
 
+bool isFinalStateAndEndOfWord(bool isFinalState, string remaningWord)
+{
+    if (isFinalState and remaningWord == "")
+    {
+        return true;
+    }
+    return false;
+}
+
+bool isStackTopAcceptedByTransition(char pop, char stackTop)
+{
+    if (pop == '&' or pop == stackTop)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool isPopNotEmpty(char pop)
+{
+    if (pop != '&')
+    {
+        return true;
+    }
+    return false;
+}
+
+bool isPushNotEmpty(char push)
+{
+    if (push != '&')
+    {
+        return true;
+    }
+    return false;
+}
+
+string nextWord(char c, string remainingWord)
+{
+    if (c == '&')
+    {
+        return remainingWord;
+    }
+    return remainingWord.substr(1, remainingWord.length() - 1);
+}
+
 bool testWord(State *currentState, string remainingWord, stack<char> s)
 {
     if (s.empty())
     {
         return false;
     }
-    cout << endl
+    /*cout << endl
          << "estado atual: " << currentState->getQ()
          << " - topo pilha: " << s.top() << " - palavra restante: " << remainingWord << endl
-         << endl;
-    if (currentState->FinalState() and remainingWord == "")
+         << endl;*/
+    if (isFinalStateAndEndOfWord(currentState->FinalState(), remainingWord))
     {
         return true;
     }
 
     vector<Transition *> t = currentState->getAllTrasitionsByChar(remainingWord[0]);
+    // for (int i = 0; i < t.size(); i++)
+    // {
+    //     cout << "estado para ir: " << t[i]->getGo_to()->getQ() << ", input char das transicoes: " << t[i]->getInput_char() << ", pop: " << t[i]->getPop() << endl;
+    // }
     for (int i = 0; i < t.size(); i++)
     {
-        cout << "estado para ir: " << t[i]->getGo_to()->getQ() << ", input char das transicoes: " << t[i]->getInput_char() << ", pop: " << t[i]->getPop() << endl;
-    }
-    for (int i = 0; i < t.size(); i++)
-    {
-        if (t[i]->getPop() == '&' or t[i]->getPop() == s.top())
+        if (isStackTopAcceptedByTransition(t[i]->getPop(), s.top()))
         {
-            // so da pop se a transicao pede
-            if (t[i]->getPop() != '&' or t[i]->getPop() == s.top())
+            if (isPopNotEmpty(t[i]->getPop()))
             {
                 s.pop();
             }
 
-            //  ele so da push quando nao eh char vazio
-            if (t[i]->getPush()[0] != '&')
+            //  alterar quando for usar push grande
+            if (isPushNotEmpty(t[i]->getPush()[0]))
             {
                 s.push(t[i]->getPush()[0]);
             }
 
-            // letra a ser consumido eh vazio, nao consome da palavra
-            if (t[i]->getInput_char() == '&')
+            string next_word = nextWord(t[i]->getInput_char(), remainingWord);
+
+            if (testWord(t[i]->getGo_to(), next_word, s))
             {
-                if(testWord(t[i]->getGo_to(), remainingWord, s)) {
-                    return true;
-                };
+                return true;
             }
-            else
-                if(testWord(t[i]->getGo_to(), remainingWord.substr(1, remainingWord.length() - 1), s))
-                    return true;
         }
     }
     return false;

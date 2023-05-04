@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/nana_/Desktop/pushdown-automaton-simulator",
-      "program": "c:/Users/nana_/Desktop/pushdown-automaton-simulator/build/Debug/outDebug",
+      "cwd": "c:/Users/johanna.kirchner/Desktop/faculdade/TC trab",
+      "program": "c:/Users/johanna.kirchner/Desktop/faculdade/TC trab/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
